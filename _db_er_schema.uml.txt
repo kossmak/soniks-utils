@@ -1,0 +1,146 @@
+@startuml
+' hide the spot
+hide circle
+' avoid problems with angled crows feet
+skinparam linetype ortho
+
+entity "users" {
+  * uuid : uuid <<PK>>
+  --
+  username : varchar(128) <<UNIQUE>>
+  email : varchar(128) <<UNIQUE>>
+  teacher_uuid : uuid <<FK>>
+}
+
+entity "stations" {
+  * id : integer <<PK>>
+  --
+  owner_uuid : uuid <<FK>>
+  name : varchar(128) <<UNIQUE>>
+}
+
+entity "antennas" {
+  * uuid : uuid <<PK>>
+  --
+  station_id : integer <<FK>>
+}
+
+entity "countries" {
+  * id : integer <<PK>>
+  --
+  name : varchar(100) <<UNIQUE>>
+}
+
+entity "satellite_networks" {
+  * id : integer <<PK>>
+  --
+  name : varchar(100) <<UNIQUE>>
+}
+
+entity "launches" {
+  * uuid : uuid <<PK>>
+  --
+  country_id : integer <<FK>>
+}
+
+entity "satellites" {
+  * uuid : uuid <<PK>>
+  --
+  sat_id : varchar(25) <<UNIQUE>>
+  decoder_id : integer <<FK>>
+  operator_id : integer <<FK>>
+  network_id : integer <<FK>>
+  launch_uuid : uuid <<FK>>
+}
+
+entity "launch_satellites" {
+  * uuid : uuid <<PK>>
+  --
+  launch_uuid : uuid <<FK>>
+  network_id : integer <<FK>>
+}
+
+entity "coordinates" {
+  * id : integer <<PK>>
+  --
+  satellite_uuid : uuid <<FK>>
+}
+
+entity "tles" {
+  * id : integer <<PK>>
+  --
+  satellite_uuid : uuid <<FK>>
+}
+
+entity "transmitters" {
+  * uuid : uuid <<PK>>
+  --
+  satellite_uuid : uuid <<FK>>
+  downlink_mode_id : integer <<FK>>
+  uplink_mode_id : integer <<FK>>
+}
+
+entity "satellite_countries" {
+  * satellite_uuid : uuid <<PK,FK>>
+  * country_id : integer <<PK,FK>>
+}
+
+entity "station_confirmation_log" {
+  * id : integer <<PK>>
+  --
+  station_id : integer <<FK>>
+  acting_user_uuid : uuid <<FK>>
+}
+
+entity "station_connection_log" {
+  * id : integer <<PK>>
+  --
+  station_id : integer <<FK>>
+  acting_user_uuid : uuid <<FK>>
+}
+
+entity "decoders" {
+  * id : integer <<PK>>
+  --
+  name : varchar(100) <<UNIQUE>>
+}
+
+entity "operators" {
+  * id : integer <<PK>>
+  --
+  name : varchar(100) <<UNIQUE>>
+}
+
+entity "modes" {
+  * id : integer <<PK>>
+  --
+  name : varchar(100) <<UNIQUE>>
+}
+
+entity "alembic_version" {
+  * version_num : varchar(32) <<PK>>
+}
+
+users ||--o{ stations : owner_uuid
+users ||--o{ users : teacher_uuid
+users ||--o{ station_confirmation_log : acting_user_uuid
+users ||--o{ station_connection_log : acting_user_uuid
+stations ||--o{ antennas : station_id
+stations ||--o{ station_confirmation_log : station_id
+stations ||--o{ station_connection_log : station_id
+countries ||--o{ launches : country_id
+countries ||--o{ satellite_countries : country_id
+satellite_networks ||--o{ satellites : network_id
+satellite_networks ||--o{ launch_satellites : network_id
+launches ||--o{ satellites : launch_uuid
+launches ||--o{ launch_satellites : launch_uuid
+satellites ||--o{ coordinates : satellite_uuid
+satellites ||--o{ tles : satellite_uuid
+satellites ||--o{ transmitters : satellite_uuid
+satellites ||--o{ satellite_countries : satellite_uuid
+decoders ||--o{ satellites : decoder_id
+operators ||--o{ satellites : operator_id
+modes ||--o{ transmitters : downlink_mode_id
+modes ||--o{ transmitters : uplink_mode_id
+
+@enduml
