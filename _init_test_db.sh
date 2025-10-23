@@ -13,8 +13,40 @@ PGHOST=localhost
 # внимание, это дебаг-тест-база для отладки миграций
 PGDATABASE=soniks_test
 
+PG_COPY_DATA=0
+
 DEV_DB=soniks
 
+parseopts () {
+  while getopts "hd" optname
+      do
+        case "$optname" in
+          "d")
+            echo "Включить копирование данных из dev-БД"
+            PG_COPY_DATA=1
+            ;;
+          "h")
+            echo "Скрипт для дропа и пересоздания тестовой БД"
+            echo "Параметры:"
+            echo "    -d - включить копирование данных из dev-БД"
+            echo "    -h - помощь"
+            echo ""
+            echo "Пример: PYTHONPATH=. python3 ./scripts/init_test_db.py -d"
+            exit 0
+            ;;
+          "?")
+            echo "Неизвестный параметр: -$OPTARG"
+            exit 1
+            ;;
+          *)
+            # Соответствий не найдено
+            echo "Unknown error while processing options"
+            ;;
+        esac
+      done
+}
+
+parseopts "$@"
 
 echo "Попытка завершить все подключения к ${PGDATABASE}..."
 # Завершить все активные сессии к дебаг-базе (кроме текущей)
@@ -31,12 +63,12 @@ else
 fi
 
 echo "Дропаем базу ${PGDATABASE}"
-psql -h ${PGHOST} -U ${PGUSER} -d ${DEV_DB} -c "drop database if exists ${PGDATABASE};"
-if [ $? -eq 0 ]; then
-    echo "База ${PGDATABASE} успешно удалена."
-else
+if ! psql -h ${PGHOST} -U ${PGUSER} -d ${DEV_DB} -c "drop database if exists ${PGDATABASE};";
+then
     echo "Ошибка при дропе базы."
     exit 1
+else
+    echo "База ${PGDATABASE} успешно удалена."
 fi
 
 set -o errexit
@@ -50,8 +82,16 @@ else
     exit 1
 fi
 
-pg_dump -U ${PGUSER} -h ${PGHOST} -d ${DEV_DB} > _last_db_backup.sql
+# создаём бэкап из dev-БД
+if [[ $PG_COPY_DATA -eq 1 ]]; then
+    echo "Копируем структуру и данные из dev-БД"
+    pg_dump -U ${PGUSER} -h ${PGHOST} -d ${DEV_DB} > _last_db_backup.sql
+else
+    echo "Копируем структуру из dev-БД"
+    pg_dump -U ${PGUSER} -h ${PGHOST} -d ${DEV_DB} --schema-only > _last_db_backup.sql
+fi
 
+# накатываем бэкап на тестовую БД
 psql -h ${PGHOST} -U ${PGUSER} -d ${PGDATABASE} < _last_db_backup.sql
 
 echo "DONE!"
