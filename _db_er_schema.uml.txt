@@ -31,7 +31,7 @@ entity "countries" {
   name : varchar(100) <<UNIQUE>>
 }
 
-entity "satellite_networks" {
+entity "satellite_projects" {
   * id : integer <<PK>>
   --
   name : varchar(100) <<UNIQUE>>
@@ -49,7 +49,7 @@ entity "satellites" {
   sat_id : varchar(25) <<UNIQUE>>
   decoder_id : integer <<FK>>
   operator_id : integer <<FK>>
-  network_id : integer <<FK>>
+  project_id : integer <<FK>>
   launch_uuid : uuid <<FK>>
 }
 
@@ -57,7 +57,7 @@ entity "launch_satellites" {
   * uuid : uuid <<PK>>
   --
   launch_uuid : uuid <<FK>>
-  network_id : integer <<FK>>
+  project_id : integer <<FK>>
 }
 
 entity "coordinates" {
@@ -130,8 +130,8 @@ stations ||--o{ station_confirmation_log : station_id
 stations ||--o{ station_connection_log : station_id
 countries ||--o{ launches : country_id
 countries ||--o{ satellite_countries : country_id
-satellite_networks ||--o{ satellites : network_id
-satellite_networks ||--o{ launch_satellites : network_id
+satellite_projects ||--o{ satellites : project_id
+satellite_projects ||--o{ launch_satellites : project_id
 launches ||--o{ satellites : launch_uuid
 launches ||--o{ launch_satellites : launch_uuid
 satellites ||--o{ coordinates : satellite_uuid
