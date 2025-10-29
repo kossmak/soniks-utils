@@ -48,6 +48,10 @@ parseopts () {
 
 parseopts "$@"
 
+##############################################################
+# закрыть все активные сессии к пересоздаваемой debug-test-БД
+# (кроме текущей, разумеется
+#   - используемая для этого сессия закроется сама по завершении процесса отключения остальных)
 echo "Попытка завершить все подключения к ${PGDATABASE}..."
 # Завершить все активные сессии к дебаг-базе (кроме текущей)
 psql -h ${PGHOST} -U ${PGUSER}  -d ${DEV_DB} -c "
@@ -62,6 +66,9 @@ else
     exit 1
 fi
 
+
+##############################################################
+# drop db (test)
 echo "Дропаем базу ${PGDATABASE}"
 if ! psql -h ${PGHOST} -U ${PGUSER} -d ${DEV_DB} -c "drop database if exists ${PGDATABASE};";
 then
@@ -73,6 +80,8 @@ fi
 
 set -o errexit
 
+##############################################################
+# create empty db (test)
 echo "Пересоздаём пустую базу ${PGDATABASE}..."
 psql -h ${PGHOST} -U ${PGUSER} -d ${DEV_DB} -c "create database ${PGDATABASE} with owner ${PGUSER};"
 if [ $? -eq 0 ]; then
@@ -82,7 +91,8 @@ else
     exit 1
 fi
 
-# создаём бэкап из dev-БД
+##############################################################
+# забираем актуальный дамп из dev-БД
 if [[ $PG_COPY_DATA -eq 1 ]]; then
     echo "Копируем структуру и данные из dev-БД"
     pg_dump -U ${PGUSER} -h ${PGHOST} -d ${DEV_DB} > _last_db_backup.sql
@@ -91,6 +101,7 @@ else
     pg_dump -U ${PGUSER} -h ${PGHOST} -d ${DEV_DB} --schema-only > _last_db_backup.sql
 fi
 
+##############################################################
 # накатываем бэкап на тестовую БД
 psql -h ${PGHOST} -U ${PGUSER} -d ${PGDATABASE} < _last_db_backup.sql
 
