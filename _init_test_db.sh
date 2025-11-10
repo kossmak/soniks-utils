@@ -6,9 +6,8 @@
 
 set -o nounset
 
-PGUSER=admin
-PGPASSWORD=admin
-PGHOST=localhost
+PGUSER="admin"
+PGHOST="localhost"
 
 # внимание, это дебаг-тест-база для отладки миграций
 PGDATABASE=soniks_test
