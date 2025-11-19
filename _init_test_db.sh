@@ -111,4 +111,17 @@ fi
 ##############################################################
 psql -h ${PGHOST} -U ${PGUSER} -d ${PGDATABASE} < _last_db_backup.sql
 
+if [[ $PG_COPY_DATA -ne 1 ]]; then
+    # данные таблиц не копировались, только структура,
+    # но содержимое служебной таблицы alembic_version должно быть заполнено
+    # чтобы alembic мог корректно сравнить версии
+    echo "Копируем данные alembic_version из dev-БД"
+
+    pg_dump -h ${PGHOST} -U ${PGUSER} -d ${DEV_DB} \
+      --table=alembic_version \
+      --data-only \
+      --inserts \
+    | psql -h ${PGHOST} -U ${PGUSER} -d ${PGDATABASE}
+fi
+
 echo "DONE!"
