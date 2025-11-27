@@ -14,6 +14,7 @@ def _main() -> None:
         host="127.0.0.1",
         port=8088,
         reload=True,
+        root_path="soniks",
         log_level="debug",
         reload_dirs=["src"],
         # reload_excludes=["*.pyc", "__pycache__", "templates"],
