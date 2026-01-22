@@ -54,12 +54,14 @@ parseopts "$@"
 ##############################################################
 echo "Попытка завершить все подключения к ${PGDATABASE}..."
 # Завершить все активные сессии к дебаг-базе (кроме текущей)
-psql -h ${PGHOST} -U ${PGUSER}  -d ${DEV_DB} -c "
-SELECT pg_terminate_backend(pid)
-FROM pg_stat_activity
-WHERE datname = '${PGDATABASE}' AND pid <> pg_backend_pid();
-"
-if [ $? -eq 0 ]; then
+sql_query=$(cat <<EOF
+  SELECT pg_terminate_backend(pid)
+  FROM pg_stat_activity
+  WHERE datname = '${PGDATABASE}' AND pid <> pg_backend_pid();
+EOF
+)
+
+if psql -h ${PGHOST} -U ${PGUSER}  -d ${DEV_DB} -c "${sql_query}"; then
     echo "Подключения завершены."
 else
     echo "Ошибка при завершении подключений. Проверьте права и подключение."
@@ -85,8 +87,11 @@ set -o errexit
 # step2: create empty db (test)
 ##############################################################
 echo "Пересоздаём пустую базу ${PGDATABASE}..."
-psql -h ${PGHOST} -U ${PGUSER} -d ${DEV_DB} -c "create database ${PGDATABASE} with owner ${PGUSER};"
-if [ $? -eq 0 ]; then
+sql_query=$(cat <<EOF
+  create database ${PGDATABASE} with owner ${PGUSER};
+EOF
+)
+if psql -h ${PGHOST} -U ${PGUSER} -d ${DEV_DB} -c "${sql_query}"; then
     echo "База ${PGDATABASE} успешно пересоздана."
 else
     echo "Ошибка при создании базы."
