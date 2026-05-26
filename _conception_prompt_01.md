@@ -201,6 +201,26 @@ stateDiagram-v2
 
       - каждая станция при регистрации получает уникальный токен, который можно использовать как пароль для тут же создавамого rabbit-пользователя `station_{id}`
       - каждый такой пользователь `station_{id}` получает permissions по регулярке с соответствующим суффиксом `.*\.station\.{id}\..*`
+```bash
+docker exec -it soniks-rabbitmq bash
+# 1. Создаем пользователя для конкретной станции
+rabbitmqctl add_user "station_138" "e34aa19a68246f5c430ac449a4a9f508812863614ae4c98ceb6ac502afb9eee2"
+```
+> Adding user "station_138" ...
+> Done. Don't forget to grant the user permissions to some virtual hosts! See 'rabbitmqctl help set_permissions' to learn more.
+```bash
+# 2. Назначаем теги (опционально, оставляем без доступа к веб-админке)
+rabbitmqctl set_user_tags "station_138"
+```
+> Setting tags for user "station_138" to [] ...
+
+```bash
+# 3. Выставляем права по регулярному выражению на дефолтный vhost ("/")
+# Синтаксис: rabbitmqctl set_permissions [-p vhost] пользователь configure write read
+rabbitmqctl set_permissions -p "/" "station_138" "^.*\.station\.138\..*$" "^.*\.station\.138\..*$" "^.*\.station\.138\..*$"
+```
+> Setting permissions for user "station_138" in vhost "/" ...
+
  
   - с rabbit-юзер-паролем клиент станции будет иметь возможность вычитывать только свою очередь, без возможности испортить/вычитать задания для другой станции - не смогут портить жизнь друг другу, случайно/умышленно, полностью доверять внешним коннектам мы не имеем права
 
