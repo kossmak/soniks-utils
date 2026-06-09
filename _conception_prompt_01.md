@@ -142,13 +142,13 @@ yc storage bucket create \
 ```
 ```
 # terraform
-resource "yandex_storage_bucket" "sonics-data-prod" {
+resource "yandex_storage_bucket" "sonics-data-dev" {
   anonymous_access_flags {
     read        = true
     list        = false
     config_read = false
   }
-  bucket                  = "sonics-data-prod"
+  bucket                  = "sonics-data-dev"
   default_storage_class   = "STANDARD"
   disabled_statickey_auth = false
   folder_id               = "b1g5o519kljb1bkigdop"
@@ -158,6 +158,7 @@ resource "yandex_storage_bucket" "sonics-data-prod" {
   }
 }
 ```
+> **warning** не получится использовать "как в проде" имя бакета sonics-data-prod, т.к. оно уже используется продом sonik.space и Яндекс не позволяет создавать несколько бакетов с одинаковым именем (даже из-под разных аккаунтов, nuff sad)
 
 
 # 006. Статусная модель Observation (State Machine)
