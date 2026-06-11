@@ -1,13 +1,3 @@
-# 001. Обзор системы
-Проект Soniks предназначен для мониторинга спутников через сеть распределенных наземных станций (Raspberry Pi). 
-Основная задача архитектуры — обеспечить гарантированную доставку заданий на наблюдения в условиях нестабильной связи и автоматизировать сбор телеметрии.
-
-# 002. Технологический стек
-- **Backend:** Python 3.12, FastAPI, SQLAlchemy 2.0 (async), Dishka (DI).
-- **Infrastructure:** PostgreSQL, RabbitMQ, Docker.
-- **Background Tasks:** Taskiq.
-- **Client (Station):** Python, Docker, SQLite (Local Persistence).
-- **File Storage:** S3-compatible storage (MinIO/AWS/Yandex).
 
 # 003. Схема взаимодействия
 ```mermaid
