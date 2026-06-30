@@ -264,6 +264,7 @@ stateDiagram-v2
 docker exec -it soniks-rabbitmq bash
 # 1. Создаем пользователя для конкретной станции
 rabbitmqctl add_user "station_138" "e34aa19a68246f5c430ac449a4a9f508812863614ae4c98ceb6ac502afb9eee2"
+rabbitmqctl add_user "station_999999" "e237be708bd3403a7c8cc75b97faf3a0a783ea4aa320c38d045b3974c5971e78"
 ```
 > Adding user "station_138" ...
 > Done. Don't forget to grant the user permissions to some virtual hosts! See 'rabbitmqctl help set_permissions' to learn more.
@@ -276,7 +277,8 @@ rabbitmqctl set_user_tags "station_138"
 ```bash
 # 3. Выставляем права по регулярному выражению на дефолтный vhost ("/")
 # Синтаксис: rabbitmqctl set_permissions [-p vhost] пользователь configure write read
-rabbitmqctl set_permissions -p "/" "station_138" "^.*\.station\.138\..*$" "^.*\.station\.138\..*$" "^.*\.station\.138\..*$"
+rabbitmqctl set_permissions -p "/" "station_138" "^station\.138\..*$" "^station\.138\..*$" "^station\.138\..*$"
+rabbitmqctl set_permissions -p "/" "station_999999" "^test\.999999\..*$" "^test\.999999\..*$" "^test\.999999\..*$"
 ```
 > Setting permissions for user "station_138" in vhost "/" ...
 
