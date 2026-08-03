@@ -14,30 +14,34 @@
 Конфигурационные параметры подгружаются pydantic-config-моделью из .env файла.
 Юниттесты и интеграционные подгружают конфиг из .env.test и .env.itest соответственно.
 
-инфраструктурные docker-контейнеры слушают сокеты docker-сети и localhost
+Интеграционные тесты используют только тестовую БД, наполняемую "живыми данными". 
 
-py.test запускаем в виртуальном python-окружении рабочей станции, пока не используем для этого окружение внутри docker-контейнера и docker-сети
+Инфраструктурные docker-контейнеры слушают сокеты docker-сети и localhost
+
+py.test, в первую очередь, запускаем в виртуальном python-окружении рабочей станции для бесшовной отладки в PyCharm, пока не используем для этого окружение внутри docker-контейнера и docker-сети, но имеем целью сделать первоочередным окружением для тестирования именно среду внутри контейнера (скорее всего, запускаемого из того же образа) - пишем тесты, допускающие запуск в контейнере.
  
 # 003. Требования к коду
 
-- Кавычки `"` вместо `'`
+- Кавычки `"` вместо апострофов `'`
 - Аннотации типов во всех функциях и классах
+- Для сложных сигнатур используй алиасы типов
 - f-строки в обычном коде, `%s` в вызовах логгера
 - Частные функции — в конец модуля
 
-Не злоупотреблять `except Exception:` - предпочтительнее ловить конкретные ожидаемые эксепшены.
+- Don't use python common `except Exception`, only catch specific expected error classes
 
-`make_async_container(*get_providers(), context=dishka_context(settings))` — те же провайдеры что и в основном приложении и `seed_db_demo_data.py`
+- для всех процессов в рамках проекта-приложения soniks-backend (API + админка и вспомогательные скрипты) используем однотипную инициализацию:
+    `make_async_container(*get_providers(), context=dishka_context(settings))` — те же провайдеры что и в основном приложении и `seed_db_demo_data.py`
  
 **Идемпотентность:**
-запуски тестов не ломают катастрофически состояние подопытной БД и инфраструктуры
-повторный запуск теста не должен ломаться
+Запуски тестов не ломают катастрофически состояние подопытной БД и инфраструктуры
+Повторный запуск теста не должен ломаться
  
-**внесение изменений**
+**Внесение изменений**
 Удаляй/актуализируй комментарии и прежний код только если они противоречат новой логике, или содержат ошибки (аргументируй спорную необходимость в новых комментариях)
-чтобы я мог видеть нужные различия в git-diff, не отвлекаясь на беспричинно пропавшие и изменившиеся строки.
+Чтобы я мог видеть нужные различия в git-diff, не отвлекаясь на беспричинно пропавшие и изменившиеся строки.
  
-используй best practices, предлагай рефакторинг в пользу большей ясности для чтения и меньшему количеству кастомизаций/правок.
+Используй best practices, аргументированно предлагай рефакторинг в пользу большей ясности для чтения и меньшему количеству кастомизаций/правок.
 
 
 -------
@@ -48,11 +52,11 @@ Always respond in Russian only.
 
 Do not include code in your response immediately if I haven't request it but ask if you need to show examples by numbering the items in a list.
 This includes code snippets.
-If you show me code examples or their variants description please number them with three digits so that it is convenient to refer to them unambiguously in a conversation. Priority should be given to a conceptual discussion of solutions.
+If you show me code examples or their variants description please number them with three (or more) digits so that it is convenient to refer to them unambiguously in a conversation. Priority should be given to a conceptual discussion of solutions.
 
 Enumerate your questions with Q-prefix like Q1, Q2, Q3.
 
-Don't reset samples and questions numeration, continue with increment.
+Don't reset samples and questions numeration, continue til infinity with increment.
 
 When asked to explain something, always start by explaining the concept, where it applies, why, what it is used for, what the best practices and anti-patterns are, without giving code examples. Only give examples when asked. After explaining, if there is a link to the official documentation for this request, include it at the end of your answer.
 No imagination.
@@ -81,5 +85,3 @@ WHAT ANSWERS I EXPECT:
 Step-by-step, if the request is complex.
 With options — if different approaches are possible.
 With an explanation, if the answer may be ambiguous.
-
-Don't use python except exception, only specific expected error classes
