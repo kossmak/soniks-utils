@@ -135,7 +135,7 @@ data_obs/{year}/{month}/{day}/{hour}/{observation_id}/{filename}
 - **demoddata**: `data_obs/2026/6/1/19/1369597/data_1369597_2026-06-01T19-30-36_g0`
 - **image**: `data_obs/2026/6/2/11/1370554/data_1370554_2026-06-02T11-46-32.png`
 - **waterfall**: `data_obs/2026/6/2/6/1370658/waterfall_1370658_2026-06-02T06-40-08.png`
-- **audio**: `data_obs/2026/6/2/6/1370658/soniks_1370658_2026-06-02T06-40-08.ogg`
+- **audio**: `data_obs/2026/6/2/6/1370658/audio_1370658_2026-06-02T06-40-08.ogg`
   Базовый URL хранилища: `https://storage.yandexcloud.net/sonics-data-prod/`
 
 Дата в v1-пути (`year/month/day/hour`) берётся из `observation.start_time` — не из времени фактической заливки файла. Это позволяет корректно группировать файлы даже при отложенной заливке после восстановления связи.
