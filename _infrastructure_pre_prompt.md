@@ -11,6 +11,17 @@
 - **Client (Station):** Python, Docker, SQLite (Local Persistence).
 - **File Storage:** S3-compatible storage (MinIO/Yandex).
 
+Интерпретатор и виртуальное окружение собраны утилитой uv. 
+
+Для запуска исполняемых команд необходимо использовать uv run.
+примеры: 
+```bash
+uv run python main.py
+uv run ruff check .
+uv run ty .
+uv run pytest tests/unit
+```
+
 Конфигурационные параметры подгружаются pydantic-config-моделью из .env файла.
 Юниттесты и интеграционные подгружают конфиг из .env.test и .env.itest соответственно.
 
