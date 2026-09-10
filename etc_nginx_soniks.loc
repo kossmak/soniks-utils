@@ -1,0 +1,263 @@
+# /etc/nginx/sites-available/soniks.loc
+server {
+    server_name soniks.loc;
+
+    # Скрываем версию nginx в заголовках ответа и страницах ошибок.
+    server_tokens off;
+
+    # Лимит тела запроса
+    client_max_body_size 10M;
+
+    # # Именованный location для проксирования на фронт при 404.
+    # # Используется как fallback в директиве error_page ниже.
+    # location @frontend_404 {
+    #     proxy_pass          http://127.0.0.1:5000;
+    #     proxy_set_header    Host              $host;
+    #     proxy_set_header    X-Real-IP         $remote_addr;
+    #     proxy_set_header    X-Forwarded-For   $proxy_add_x_forwarded_for;
+    #     proxy_set_header    X-Forwarded-Proto $scheme;
+    # }
+
+    # # При любом nginx-404 (включая скрытые эндпоинты ниже) —
+    # # отображаем 404-страницу фронтенда вместо стандартной nginx-страницы.
+    # error_page 404 = @frontend_404;
+
+    location /metrics {
+        return 404;
+    }
+
+    location /api/v2/health {
+        return 404;
+    }
+
+    # дашборды
+    location /dashboard/api/live/ {
+        proxy_pass         http://127.0.0.1:3001;
+
+        proxy_http_version 1.1;
+        proxy_set_header   Upgrade    $http_upgrade;
+        proxy_set_header   Connection "upgrade";
+
+        proxy_set_header   Host               $host;
+        proxy_set_header   X-Real-IP          $remote_addr;
+        proxy_set_header   X-Forwarded-For    $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto  $scheme;
+    }
+
+    location /dashboard/ {
+        proxy_pass         http://127.0.0.1:3001;
+
+        proxy_set_header   Host               $host;
+        proxy_set_header   X-Real-IP          $remote_addr;
+        proxy_set_header   X-Forwarded-For    $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto  $scheme;
+
+        proxy_buffering    off;
+        proxy_read_timeout 300s;
+    }
+
+    # мониторинг
+
+    location /observability/api/live/ {
+        proxy_pass         http://127.0.0.1:3000;
+
+        proxy_http_version 1.1;
+        proxy_set_header   Upgrade    $http_upgrade;
+        proxy_set_header   Connection "upgrade";
+
+        proxy_set_header   Host               $host;
+        proxy_set_header   X-Real-IP          $remote_addr;
+        proxy_set_header   X-Forwarded-For    $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto  $scheme;
+    }
+
+    # location /apis/ {
+    # limit_req zone=api burst=150 nodelay;
+
+    # proxy_pass         http://127.0.0.1:3000;
+    # proxy_set_header   Host              $host;
+    # proxy_set_header   X-Real-IP         $remote_addr;
+    # proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+    # proxy_set_header   X-Forwarded-Proto $scheme;
+    # }
+
+    location /observability/ {
+        proxy_pass         http://127.0.0.1:3000;
+
+        proxy_set_header   Host               $host;
+        proxy_set_header   X-Real-IP          $remote_addr;
+        proxy_set_header   X-Forwarded-For    $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto  $scheme;
+
+        proxy_buffering    off;
+        proxy_read_timeout 300s;
+    }
+
+    # статика и медиа
+    location /static {
+        # alias /opt/deploy/soniks/static/;
+        alias /home/kp.makarov@geoscan.lan/proj/soniks/static/;
+
+        expires 30d;
+        add_header Cache-Control "public, no-transform";
+        access_log off;
+        log_not_found off;
+
+        limit_except GET HEAD {
+            deny all;
+        }
+    }
+
+    location /admin/statics/ {
+        # alias /opt/deploy/soniks/static/;
+        alias /home/kp.makarov@geoscan.lan/proj/soniks/.venv/lib/python3.12/site-packages/sqladmin/statics/;
+
+        expires 30d;
+        add_header Cache-Control "public, no-transform";
+        access_log off;
+        log_not_found off;
+
+        limit_except GET HEAD {
+            deny all;
+        }
+    }
+
+    location /documents/ {
+        alias /opt/deploy/soniks/documents/;
+
+        expires 7d;
+        add_header Cache-Control "public, no-transform";
+        add_header X-Content-Type-Options nosniff;
+
+        access_log off;
+        log_not_found off;
+
+        # Только PDF и текстовые документы
+        location ~* \.(pdf|docx|doc|txt|html)$ {
+            add_header Content-Disposition "inline";
+        }
+
+        limit_except GET HEAD {
+            deny all;
+        }
+    }
+
+    # legacy-телеметрия, изображения, полученные со спутников, аудиопоток и водопады
+    location /data_obs/ {
+        expires 1d;
+        add_header Cache-Control "public, no-transform";
+
+        access_log off;
+        log_not_found off;
+
+        limit_except GET HEAD {
+            deny all;
+        }
+
+        return 301 https://storage.yandexcloud.net/sonics-data-prod$request_uri;
+    }
+
+    # legacy-изображения станций из v1 sonik.space
+    location /ground_stations/ {
+        # alias /opt/storage/soniks_v1_media/ground_stations/;
+        alias /home/kp.makarov@geoscan.lan/proj/nginx_data/soniks_v1_media/ground_stations/;
+
+        access_log off;
+        log_not_found off;
+
+        # Запрещаем методы DELETE PATCH POST PUT
+        limit_except GET HEAD {
+            deny all;
+        }
+
+        # Разрешаем только изображения
+        location ~* \.(jpe?g|png|gif|svg|webp)$ {
+            expires 30d;
+            add_header Cache-Control "public, no-transform, immutable";
+            add_header X-Content-Type-Options nosniff;
+        }
+    }
+
+    # legacy-изображения спутников из v1 sonik.space
+    location /satellites/ {
+        # alias /opt/storage/soniks_v1_media/satellites/;
+        alias /home/kp.makarov@geoscan.lan/proj/nginx_data/soniks_v1_media/satellites/;
+
+        access_log off;
+        log_not_found off;
+
+        # Запрещаем методы DELETE PATCH POST PUT
+        limit_except GET HEAD {
+            deny all;
+        }
+
+        # Разрешаем только изображения
+        location ~* \.(jpe?g|png|gif|svg|webp)$ {
+            expires 30d;
+            add_header Cache-Control "public, no-transform, immutable";
+            add_header X-Content-Type-Options nosniff;
+        }
+    }
+
+    # S3 minio bucket для файлов, добавленных через новую админку
+    location /media {
+        proxy_pass         http://127.0.0.1:9000;
+        proxy_set_header   Host $host;
+
+        expires 7d;
+        add_header Cache-Control "public, immutable";
+        access_log off;
+    }
+
+    # S3 minio bucket для отображения и добавления файлов наблюдений
+    location /sonics-data-dev {
+        proxy_pass         http://127.0.0.1:9000;
+        proxy_set_header   Host $host;
+
+        expires 7d;
+        add_header Cache-Control "public, immutable";
+        access_log off;
+    }
+
+    # бэкенд
+    location /api/v2/ {
+        # burst — допускает кратковременный всплеск (до 150r/s).
+        # nodelay — запросы из burst выполняются сразу, без искусственной задержки.
+        # limit_req zone=api burst=150 nodelay;
+
+    # proxy_pass         http://127.0.0.1:8000;
+        proxy_pass         http://127.0.0.1:8088;
+
+        proxy_http_version 1.1;
+        proxy_set_header   Host $host;
+        proxy_set_header   X-Real-IP $remote_addr;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+    }
+
+    location /admin/ {
+        # limit_req zone=api burst=150 nodelay;
+
+    # proxy_pass         http://127.0.0.1:8000;
+        proxy_pass         http://127.0.0.1:8088;
+
+        proxy_http_version 1.1;
+        proxy_set_header   Host $host;
+        proxy_set_header   X-Real-IP $remote_addr;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+    }
+
+    # фронтенд
+    location / {
+        # limit_req zone=api burst=150 nodelay;
+
+        proxy_pass         http://127.0.0.1:5000;
+
+        proxy_http_version 1.1;
+        proxy_set_header   Host $host;
+        proxy_set_header   X-Real-IP $remote_addr;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+    }
+}
