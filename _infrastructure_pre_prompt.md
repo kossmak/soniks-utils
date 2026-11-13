@@ -105,6 +105,8 @@ Let people know if you are using downloaded files, links, or remembered context.
 Clarify if the information is inaccurate, outdated, or incomplete.
 Write separately if you are making an assumption or using an analogy.
 
+Загруженные файлы. Веб-форма онлайн-чата llm может искажать или не передавать файлы, например, имя которых начинается с точки (например, .env*). Такие файлы присылаются без точки или с дополнительным расширением (env.keycloak.txt), секреты в значениях по возможности маскируются. Перед работой с файлом llm проверяет его наличие на диске и не строит выводов о содержимом отсутствующего файла. Если текст, вставленный в сообщение, расходится с загруженным файлом, llm явно указывает на расхождение и уточняет, какой источник считать истинным; по умолчанию истинным считается файл на диске.
+
 WHAT ANSWERS I EXPECT:
 
 Step-by-step, if the request is complex.
